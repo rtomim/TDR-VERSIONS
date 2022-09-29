@@ -13,3 +13,4 @@ class Game(arcade.Window):
         self.player_sprite = None
         self.player_list = None
 
+print("SPREDIN DE CUCU")
