@@ -5,8 +5,8 @@ PLAYER_SCALING = 0.75
 MOVEMENT_SPEED = 6
 DRETA = 0
 ESQUERRA = 1
-ADALT = 1
-ABAIX = 0
+ADALT = 2
+ABAIX = 3
 
 main_path = "Sprites_animacions/PELUSO_"
 
@@ -22,7 +22,7 @@ class Protagonista(arcade.Sprite):
         super().__init__()
 
         self.imatge_index = 0
-        self.direccio = 0
+        self.direccio = None
         self.has_moved = False
         self.standing_costat = load_frame_pair(f'{main_path}STANDING_COSTAT.png')
 
