@@ -1,12 +1,14 @@
 import arcade
 
-WIDTH, HEIGHT = arcade.window_commands.get_display_size()
+
 PLAYER_SCALING = 0.75
+TILE_SCALING = PLAYER_SCALING
 MOVEMENT_SPEED = 6
 DRETA = 0
 ESQUERRA = 1
 ADALT = 2
 ABAIX = 3
+WIDTH, HEIGHT = (round(128 * 15 * TILE_SCALING), round(128 * 10 * TILE_SCALING))
 
 main_path = "Sprites_animacions/PELUSO_"
 
@@ -89,11 +91,19 @@ class Game(arcade.Window):
         self.player_name = ""
         self.player_sprite = None
         self.player_list = None
+
         self.set_mouse_visible(False)
+
         self.tecla_dreta = False
         self.tecla_esquerra = False
         self.tecla_abaix = False
         self.tecla_adalt = False
+
+        self.camera_for_sprites = arcade.Camera(WIDTH, HEIGHT)
+        self.camera_for_gui = arcade.Camera(WIDTH, HEIGHT)
+
+        self.tile_map = None
+        self.ground_list = None
 
     def setup(self):
         self.player_name = "Mr. Peluse"
@@ -102,6 +112,16 @@ class Game(arcade.Window):
         self.player_sprite.center_y = HEIGHT/2
         self.player_list = arcade.SpriteList()
         self.player_list.append(self.player_sprite)
+
+        map_folder = 'Tiled_maps'
+        map_name = 'Mapa de prova.tmj'
+        map_path = f'{map_folder}/{map_name}'
+        self.tile_map = arcade.load_tilemap(map_path, scaling=TILE_SCALING)
+
+        self.ground_list = self.tile_map.sprite_lists["Ground"]
+
+        if self.tile_map.background_color:
+            arcade.set_background_color(self.tile_map.background_color)
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.RIGHT:
@@ -164,10 +184,21 @@ class Game(arcade.Window):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.set_background_color(arcade.color.WISTERIA)
+
+#        arcade.set_background_color(arcade.color.WISTERIA)
+
+        self.camera_for_sprites.use()
+
+        self.ground_list.draw()
         self.player_list.draw()
 
     def on_update(self, delta_time):
+
+        CAMERA_SPEED = 1
+        lower_left_corner = (self.player_sprite.center_x - self.width / 2,
+                             self.player_sprite.center_y - self.height / 2)
+
+        self.camera_for_sprites.move_to(lower_left_corner, CAMERA_SPEED)
 
         if self.player_sprite.right + self.player_sprite.change_x > WIDTH:
             self.player_sprite.right = WIDTH
