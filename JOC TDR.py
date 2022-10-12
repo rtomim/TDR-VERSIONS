@@ -107,6 +107,25 @@ class Motxilla(arcade.Sprite):
 
         self.texture = self.frames[0]
 
+    def update_animation(self, delta_time: float = 1 / 60):
+        if self.imatge_index > 4 and self.stay < 30:
+            self.texture = self.frames[-1]
+            self.stay += 1
+        elif self.stay >= 30:
+            self.start_time = 0
+            self.imatge_index = 0
+            self.texture = self.frames[0]
+            self.stay = 0
+            self.open = False
+        elif self.imatge_index == 0:
+            self.texture = self.frames[1]
+            self.imatge_index += 1
+            self.start_time = time.time()
+        elif 0.066 <= time.time() - self.start_time:
+            self.texture = self.frames[self.imatge_index + 1]
+            self.imatge_index += 1
+            self.start_time = time.time()
+
 
 '''
 class Room:
@@ -165,7 +184,7 @@ class Game(arcade.Window):
         self.motxilla_list.append(self.motxilla)
 
         map_folder = 'Tiled_maps'
-        map_name = 'Mapa parquet.tmj'
+        map_name = 'Mapa de prova.tmj'
         map_path = f'{map_folder}/{map_name}'
         self.tile_map = arcade.load_tilemap(map_path, scaling=TILE_SCALING)
 
@@ -289,23 +308,7 @@ class Game(arcade.Window):
                 self.motxilla.open = True
 
         if self.motxilla.open:
-            if self.motxilla.imatge_index > 4 and self.motxilla.stay < 30:
-                self.motxilla.texture = self.motxilla.frames[-1]
-                self.motxilla.stay += 1
-            elif self.motxilla.stay >= 30:
-                self.motxilla.start_time = 0
-                self.motxilla.imatge_index = 0
-                self.motxilla.texture = self.motxilla.frames[0]
-                self.motxilla.stay = 0
-                self.motxilla.open = False
-            elif self.motxilla.imatge_index == 0:
-                self.motxilla.texture = self.motxilla.frames[1]
-                self.motxilla.imatge_index += 1
-                self.motxilla.start_time = time.time()
-            elif 0.066 <= time.time() - self.motxilla.start_time:
-                self.motxilla.texture = self.motxilla.frames[self.motxilla.imatge_index + 1]
-                self.motxilla.imatge_index += 1
-                self.motxilla.start_time = time.time()
+            self.motxilla.update_animation()
 
 
 def main():
