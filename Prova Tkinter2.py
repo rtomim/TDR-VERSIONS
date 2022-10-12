@@ -213,20 +213,4 @@ if __name__ == '__main__':
         game = Game(root, window_size)
     else:
         game = Game(root)
-    # item = game.canvas.create_rectangle(10, 10, 100, 80, fill='green')
-    # game_object = GameObject(game.canvas, item)
-    # item2 = game.canvas.create_rectangle(game.width - 100, 10, game.width - 10, 80, fill='red')
-    # game_object2 = GameObject(game.canvas, item2)
-    # item3 = game.canvas.create_rectangle(10, game.height - 80, 100, game.height - 10, fill='blue')
-    # game_object3 = GameObject(game.canvas, item3)
-    # item4 = game.canvas.create_rectangle(game.width - 100,
-    # game.height - 80, game.width - 10, game.height - 10, fill='yellow')
-    # game_object4 = GameObject(game.canvas, item4)
-    # print(game_object.get_position())
-    # game_object.move(20, -10)
-    # print(game_object.get_position())
-    # game_object.delete()
-    # print(game.lives)
-    # print(item)
-
-    game.mainloop()
+        game.mainloop()
