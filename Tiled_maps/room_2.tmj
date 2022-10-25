@@ -1,0 +1,41 @@
+{ "compressionlevel":-1,
+ "height":10,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[5, 5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 11, 17, 5, 6, 4, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 18, 19, 5, 6, 4, 5, 5, 5, 11, 8, 17,
+            5, 5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 18, 2, 19,
+            5, 5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 5, 5, 5,
+            8, 8, 8, 8, 8, 8, 8, 9, 7, 8, 8, 8, 8, 8, 8,
+            2, 2, 2, 2, 2, 2, 2, 3, 1, 2, 2, 2, 2, 2, 2,
+            5, 5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 5, 5, 5],
+         "height":10,
+         "id":1,
+         "name":"Capa de patrones 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":15,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.9.1",
+ "tileheight":128,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"..\/Tiled_tilesets\/GRASS-STONE.tsj"
+        }],
+ "tilewidth":128,
+ "type":"map",
+ "version":"1.9",
+ "width":15
+}

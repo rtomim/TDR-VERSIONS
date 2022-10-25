@@ -11,7 +11,7 @@ ESQUERRA = 1
 ADALT = 2
 ABAIX = 3
 WIDTH, HEIGHT = (round(128 * 15 * TILE_SCALING), round(128 * 10 * TILE_SCALING))
-CAMERA_SPEED = 1
+CAMERA_SPEED = 0.2
 
 
 main_path = "Sprites_animacions/PELUSO_"
@@ -168,6 +168,10 @@ class Game(arcade.Window):
 
         self.tile_map = None
         self.ground_list = None
+        self.map_folder = 'Tiled_maps'
+        self.grass_stone_map_name = "Mapa de prova"
+        self.parquet_map_name = "Mapa parquet"
+        self.map_path = None
 
     def setup(self):
         self.player_name = "Mr. Peluse"
@@ -183,10 +187,8 @@ class Game(arcade.Window):
         self.motxilla_list = arcade.SpriteList()
         self.motxilla_list.append(self.motxilla)
 
-        map_folder = 'Tiled_maps'
-        map_name = 'Mapa de prova.tmj'
-        map_path = f'{map_folder}/{map_name}'
-        self.tile_map = arcade.load_tilemap(map_path, scaling=TILE_SCALING)
+        self.map_path = f'{self.map_folder}/{self.grass_stone_map_name}.tmj'
+        self.tile_map = arcade.load_tilemap(self.map_path, scaling=TILE_SCALING)
 
         self.ground_list = self.tile_map.sprite_lists["Ground"]
 
@@ -229,6 +231,8 @@ class Game(arcade.Window):
                 self.player_sprite.change_y = MOVEMENT_SPEED
             if self.tecla_abaix:
                 self.player_sprite.change_y = -MOVEMENT_SPEED
+            if self.tecla_esquerra:
+                self.player_sprite.change_x = -MOVEMENT_SPEED
 
         if key == arcade.key.LEFT:
             self.tecla_esquerra = False
@@ -236,6 +240,8 @@ class Game(arcade.Window):
                 self.player_sprite.change_y = MOVEMENT_SPEED
             if self.tecla_abaix:
                 self.player_sprite.change_y = -MOVEMENT_SPEED
+            if self.tecla_dreta:
+                self.player_sprite.change_x = MOVEMENT_SPEED
 
         if key == arcade.key.UP:
             self.tecla_adalt = False
@@ -243,6 +249,8 @@ class Game(arcade.Window):
                 self.player_sprite.change_x = MOVEMENT_SPEED
             if self.tecla_esquerra:
                 self.player_sprite.change_x = -MOVEMENT_SPEED
+            if self.tecla_abaix:
+                self.player_sprite.change_y = -MOVEMENT_SPEED
 
         if key == arcade.key.DOWN:
             self.tecla_abaix = False
@@ -250,6 +258,8 @@ class Game(arcade.Window):
                 self.player_sprite.change_x = MOVEMENT_SPEED
             if self.tecla_esquerra:
                 self.player_sprite.change_x = -MOVEMENT_SPEED
+            if self.tecla_adalt:
+                self.player_sprite.change_y = MOVEMENT_SPEED
 
         if not self.tecla_dreta and not self.tecla_esquerra:
             self.player_sprite.change_x = 0
