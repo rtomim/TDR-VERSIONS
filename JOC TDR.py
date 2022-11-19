@@ -5,7 +5,7 @@ import pyglet
 
 PLAYER_SCALING = 1
 TILE_SCALING = 0.75
-MOVEMENT_SPEED = 6
+MOVEMENT_SPEED = 3.3
 DRETA = 0
 ESQUERRA = 1
 ADALT = 2
@@ -126,11 +126,19 @@ class Motxilla(arcade.Sprite):
             self.imatge_index += 1
             self.start_time = time.time()
 
+    def close(self):
+        self.texture = self.frames[0]
+        self.imatge_index = 0
+        self.open = False
+        self.key_e = False
+        self.start_time = 0
+        self.stay = 0
+
 
 '''
 class Room:
     def __init__(self):
-        self.tiled_map = None
+        self.map_name = None
 
     def setup_room_1(self):
 
@@ -158,6 +166,7 @@ class Game(arcade.Window):
 
         self.set_mouse_visible(False)
 
+        self.controls = False
         self.tecla_dreta = False
         self.tecla_esquerra = False
         self.tecla_abaix = False
@@ -165,13 +174,19 @@ class Game(arcade.Window):
 
         self.camera_for_sprites = arcade.Camera(WIDTH, HEIGHT)
         self.camera_for_gui = arcade.Camera(WIDTH, HEIGHT)
+        self.physics_engines = []
 
         self.tile_map = None
-        self.ground_list = None
+        self.scenes = []
+        self.current_map = 0
         self.map_folder = 'Tiled_maps'
         self.grass_stone_map_name = "Mapa de prova"
         self.parquet_map_name = "Mapa parquet"
         self.map_path = None
+
+        self.pantalla_negra = False
+        self.transparency = 0
+        self.opaquing = False
 
     def setup(self):
         self.player_name = "Mr. Peluse"
@@ -187,37 +202,59 @@ class Game(arcade.Window):
         self.motxilla_list = arcade.SpriteList()
         self.motxilla_list.append(self.motxilla)
 
+        layer_options = {
+            "Obstacles": {
+                "use_spatial_hash": False,},
+        }
+
+        self.map_path = f'{self.map_folder}/{self.parquet_map_name}.tmj'
+        self.tile_map = arcade.load_tilemap(self.map_path, TILE_SCALING, layer_options)
+        self.scene_1 = [arcade.Scene.from_tilemap(self.tile_map), 0]
+        self.scenes.append(self.scene_1)
+
         self.map_path = f'{self.map_folder}/{self.grass_stone_map_name}.tmj'
         self.tile_map = arcade.load_tilemap(self.map_path, scaling=TILE_SCALING)
+        self.scene_2 = [arcade.Scene.from_tilemap(self.tile_map), 1]
+        self.scenes.append(self.scene_2)
 
-        self.ground_list = self.tile_map.sprite_lists["Ground"]
+        arcade.set_background_color(arcade.color.BLACK)
 
-        if self.tile_map.background_color:
-            arcade.set_background_color(self.tile_map.background_color)
+        for n in self.scenes:
+            for x in n[0].name_mapping:
+                if x == "Obstacles":
+                    physics_engine = [arcade.PhysicsEngineSimple(self.player_sprite, n[0].name_mapping[x]), n[1]]
+                    self.physics_engines.append(physics_engine)
+
+        self.controls = True
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.RIGHT:
             self.player_sprite.change_y = 0
-            self.player_sprite.change_x = MOVEMENT_SPEED
+            if self.controls:
+                self.player_sprite.change_x = MOVEMENT_SPEED
             self.tecla_dreta = True
 
         if key == arcade.key.LEFT:
             self.player_sprite.change_y = 0
-            self.player_sprite.change_x = -MOVEMENT_SPEED
+            if self.controls:
+                self.player_sprite.change_x = -MOVEMENT_SPEED
             self.tecla_esquerra = True
 
         if key == arcade.key.UP:
             self.player_sprite.change_x = 0
-            self.player_sprite.change_y = MOVEMENT_SPEED
+            if self.controls:
+                self.player_sprite.change_y = MOVEMENT_SPEED
             self.tecla_adalt = True
 
         if key == arcade.key.DOWN:
             self.player_sprite.change_x = 0
-            self.player_sprite.change_y = -MOVEMENT_SPEED
+            if self.controls:
+                self.player_sprite.change_y = -MOVEMENT_SPEED
             self.tecla_abaix = True
 
         if key == arcade.key.E and not self.motxilla.open:
-            self.motxilla.key_e = True
+            if self.controls:
+                self.motxilla.key_e = True
 
         if key == arcade.key.ESCAPE:
             arcade.exit()
@@ -227,39 +264,43 @@ class Game(arcade.Window):
     def on_key_release(self, key, modifiers):
         if key == arcade.key.RIGHT:
             self.tecla_dreta = False
-            if self.tecla_adalt:
-                self.player_sprite.change_y = MOVEMENT_SPEED
-            if self.tecla_abaix:
-                self.player_sprite.change_y = -MOVEMENT_SPEED
-            if self.tecla_esquerra:
-                self.player_sprite.change_x = -MOVEMENT_SPEED
+            if self.controls:
+                if self.tecla_adalt:
+                    self.player_sprite.change_y = MOVEMENT_SPEED
+                if self.tecla_abaix:
+                    self.player_sprite.change_y = -MOVEMENT_SPEED
+                if self.tecla_esquerra:
+                    self.player_sprite.change_x = -MOVEMENT_SPEED
 
         if key == arcade.key.LEFT:
             self.tecla_esquerra = False
-            if self.tecla_adalt:
-                self.player_sprite.change_y = MOVEMENT_SPEED
-            if self.tecla_abaix:
-                self.player_sprite.change_y = -MOVEMENT_SPEED
-            if self.tecla_dreta:
-                self.player_sprite.change_x = MOVEMENT_SPEED
+            if self.controls:
+                if self.tecla_adalt:
+                    self.player_sprite.change_y = MOVEMENT_SPEED
+                if self.tecla_abaix:
+                    self.player_sprite.change_y = -MOVEMENT_SPEED
+                if self.tecla_dreta:
+                    self.player_sprite.change_x = MOVEMENT_SPEED
 
         if key == arcade.key.UP:
             self.tecla_adalt = False
-            if self.tecla_dreta:
-                self.player_sprite.change_x = MOVEMENT_SPEED
-            if self.tecla_esquerra:
-                self.player_sprite.change_x = -MOVEMENT_SPEED
-            if self.tecla_abaix:
-                self.player_sprite.change_y = -MOVEMENT_SPEED
+            if self.controls:
+                if self.tecla_dreta:
+                    self.player_sprite.change_x = MOVEMENT_SPEED
+                if self.tecla_esquerra:
+                    self.player_sprite.change_x = -MOVEMENT_SPEED
+                if self.tecla_abaix:
+                    self.player_sprite.change_y = -MOVEMENT_SPEED
 
         if key == arcade.key.DOWN:
             self.tecla_abaix = False
-            if self.tecla_dreta:
-                self.player_sprite.change_x = MOVEMENT_SPEED
-            if self.tecla_esquerra:
-                self.player_sprite.change_x = -MOVEMENT_SPEED
-            if self.tecla_adalt:
-                self.player_sprite.change_y = MOVEMENT_SPEED
+            if self.controls:
+                if self.tecla_dreta:
+                    self.player_sprite.change_x = MOVEMENT_SPEED
+                if self.tecla_esquerra:
+                    self.player_sprite.change_x = -MOVEMENT_SPEED
+                if self.tecla_adalt:
+                    self.player_sprite.change_y = MOVEMENT_SPEED
 
         if not self.tecla_dreta and not self.tecla_esquerra:
             self.player_sprite.change_x = 0
@@ -277,11 +318,32 @@ class Game(arcade.Window):
 
         self.camera_for_sprites.use()
 
-        self.ground_list.draw()
+        for n in self.scenes:
+            spritelist_dict = n[0].name_mapping
+            if n[1] == self.current_map:
+                for x in spritelist_dict:
+                    if x != "Decoration":
+                        spritelist_dict[x].draw()
+                    if x == "Decoration":
+                        for elem in range(len(spritelist_dict[x])):
+                            if spritelist_dict[x][elem].center_y > self.player_sprite.center_y:
+                                spritelist_dict[x][elem].draw()
+
         self.player_list.draw()
+
+        for n in self.scenes:
+            spritelist_dict = n[0].name_mapping
+            if n[1] == self.current_map:
+                for x in spritelist_dict:
+                    if x == "Decoration":
+                        for elem in range(len(spritelist_dict[x])):
+                            if spritelist_dict[x][elem].center_y < self.player_sprite.center_y:
+                                spritelist_dict[x][elem].draw()
 
         self.camera_for_gui.use()
 
+        arcade.draw_rectangle_filled(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT,
+                                     [0, 0, 0, self.transparency])
         self.motxilla_list.draw()
 
     def on_update(self, delta_time):
@@ -289,7 +351,10 @@ class Game(arcade.Window):
         lower_left_corner = pyglet.math.Vec2(self.player_sprite.center_x - self.width / 2,
                                              self.player_sprite.center_y - self.height / 2)
 
-        self.camera_for_sprites.move_to(lower_left_corner, CAMERA_SPEED)
+        if self.transparency == 255:
+            self.camera_for_sprites.move_to(lower_left_corner, 1)
+        else:
+            self.camera_for_sprites.move_to(lower_left_corner, CAMERA_SPEED)
 
         if self.player_sprite.right + self.player_sprite.change_x > WIDTH:
             self.player_sprite.right = WIDTH
@@ -297,6 +362,69 @@ class Game(arcade.Window):
             self.player_sprite.left = 2
         else:
             self.player_sprite.center_x += self.player_sprite.change_x
+
+        if (self.player_sprite.bottom <= 0 and self.player_sprite.right < 128 * TILE_SCALING * 2 and
+           self.player_sprite.change_y < 0 and self.current_map == 0)\
+                or (self.pantalla_negra and self.player_sprite.direccio == ABAIX):
+            self.controls = False
+            if self.motxilla.open:
+                self.motxilla.close()
+            self.player_sprite.change_y = 0
+            self.player_sprite.change_x = 0
+            self.player_sprite.direccio = ABAIX
+            if not self.opaquing and self.transparency == 0:
+                self.opaquing = True
+            self.pantalla_negra = True
+            if self.transparency < 255 and self.opaquing:
+                self.transparency += 5
+            elif self.transparency == 255 and self.opaquing:
+                self.opaquing = False
+                self.current_map = 1
+                self.player_sprite.top = HEIGHT
+            elif self.transparency > 0 and not self.opaquing:
+                self.transparency -= 5
+                if self.transparency == 0:
+                    if self.tecla_abaix:
+                        self.player_sprite.change_y = -MOVEMENT_SPEED
+                    if self.tecla_adalt:
+                        self.player_sprite.change_y = MOVEMENT_SPEED
+                    if self.tecla_esquerra:
+                        self.player_sprite.change_x = -MOVEMENT_SPEED
+                    if self.tecla_dreta:
+                        self.player_sprite.change_x = MOVEMENT_SPEED
+                    self.controls = True
+                    self.pantalla_negra = False
+        elif (self.player_sprite.top >= HEIGHT and self.player_sprite.right < 128 * TILE_SCALING * 2 and
+                self.player_sprite.change_y > 0 and self.current_map == 1)\
+                or (self.pantalla_negra and self.player_sprite.direccio == ADALT):
+            self.controls = False
+            if self.motxilla.open:
+                self.motxilla.close()
+            self.player_sprite.change_y = 0
+            self.player_sprite.change_x = 0
+            self.player_sprite.direccio = ADALT
+            if not self.opaquing and self.transparency == 0:
+                self.opaquing = True
+            self.pantalla_negra = True
+            if self.transparency < 255 and self.opaquing:
+                self.transparency += 5
+            elif self.transparency == 255 and self.opaquing:
+                self.opaquing = False
+                self.current_map = 0
+                self.player_sprite.bottom = 0
+            elif self.transparency > 0 and not self.opaquing:
+                self.transparency -= 5
+                if self.transparency == 0:
+                    if self.tecla_abaix:
+                        self.player_sprite.change_y = -MOVEMENT_SPEED
+                    if self.tecla_adalt:
+                        self.player_sprite.change_y = MOVEMENT_SPEED
+                    if self.tecla_esquerra:
+                        self.player_sprite.change_x = -MOVEMENT_SPEED
+                    if self.tecla_dreta:
+                        self.player_sprite.change_x = MOVEMENT_SPEED
+                    self.controls = True
+                    self.pantalla_negra = False
 
         if self.player_sprite.top + self.player_sprite.change_y > HEIGHT:
             self.player_sprite.top = HEIGHT
@@ -319,6 +447,14 @@ class Game(arcade.Window):
 
         if self.motxilla.open:
             self.motxilla.update_animation()
+
+        for physics_engine in self.physics_engines:
+            if physics_engine[1] == self.current_map:
+                physics_engine[0].update()
+
+        for x in self.scenes:
+            if x[1] == self.current_map:
+                x[0].update_animation(delta_time, ["Ground", "Obstacles", "Decoration"])
 
 
 def main():
