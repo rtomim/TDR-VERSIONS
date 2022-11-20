@@ -5,12 +5,13 @@ import pyglet
 
 PLAYER_SCALING = 1
 TILE_SCALING = 0.75
+TILE_SIZE = 128
 MOVEMENT_SPEED = 3.3
 DRETA = 0
 ESQUERRA = 1
 ADALT = 2
 ABAIX = 3
-WIDTH, HEIGHT = (round(128 * 15 * TILE_SCALING), round(128 * 10 * TILE_SCALING))
+WIDTH, HEIGHT = (round(TILE_SIZE * 15 * TILE_SCALING), round(TILE_SIZE * 10 * TILE_SCALING))
 CAMERA_SPEED = 0.2
 
 
@@ -155,6 +156,29 @@ class Room:
 '''
 
 
+class WarpPoint:
+    def __init__(self, point1: list, point2: list):
+        if isinstance(point1[0], tuple) and isinstance(point1[1], tuple) and isinstance(point1[2], int)\
+                and isinstance(point1[3], int) and isinstance(point1[4], tuple):
+            self.location1 = (point1[0], point1[1])
+            self.map1 = point1[2]
+            self.dir1 = point1[3]
+            self.spawn1 = point1[4]
+        else:
+            raise AttributeError
+        if isinstance(point2[0], tuple) and isinstance(point2[1], tuple) and isinstance(point2[2], int) \
+                and isinstance(point2[3], int) and isinstance(point2[4], tuple):
+            self.location2 = (point2[0], point2[1])
+            self.map2 = point2[2]
+            self.dir2 = point2[3]
+            self.spawn2 = point2[4]
+        else:
+            raise AttributeError
+
+        self.point1 = [point1[0], point1[1], point1[2], point1[3], point1[4]]
+        self.point2 = [point2[0], point2[1], point2[2], point2[3], point2[4]]
+
+
 class Game(arcade.Window):
     def __init__(self):
         super().__init__(WIDTH, HEIGHT, 'Mr. Pelussy', fullscreen=True)
@@ -165,6 +189,7 @@ class Game(arcade.Window):
         self.motxilla_list = None
 
         self.set_mouse_visible(False)
+
 
         self.controls = False
         self.tecla_dreta = False
@@ -184,6 +209,8 @@ class Game(arcade.Window):
         self.parquet_map_name = "Mapa parquet"
         self.map_path = None
 
+        self.warps = []
+
         self.pantalla_negra = False
         self.transparency = 0
         self.opaquing = False
@@ -202,10 +229,7 @@ class Game(arcade.Window):
         self.motxilla_list = arcade.SpriteList()
         self.motxilla_list.append(self.motxilla)
 
-        layer_options = {
-            "Obstacles": {
-                "use_spatial_hash": False,},
-        }
+        layer_options = {"Obstacles": {"use_spatial_hash": False}}
 
         self.map_path = f'{self.map_folder}/{self.parquet_map_name}.tmj'
         self.tile_map = arcade.load_tilemap(self.map_path, TILE_SCALING, layer_options)
@@ -217,6 +241,14 @@ class Game(arcade.Window):
         self.scene_2 = [arcade.Scene.from_tilemap(self.tile_map), 1]
         self.scenes.append(self.scene_2)
 
+        self.warp1 = WarpPoint([(0, TILE_SIZE * TILE_SCALING * 2 - 56), (-TILE_SIZE * TILE_SCALING, 0), 0, ABAIX,
+                                ((TILE_SIZE * TILE_SCALING * 2 - 56) / 2, 0)],
+                               [(round(12.1 * TILE_SIZE * TILE_SCALING), round(12.56 * TILE_SIZE * TILE_SCALING)),
+                                (round(3 * TILE_SIZE * TILE_SCALING), round(3.15 * TILE_SIZE * TILE_SCALING)),
+                                1, ADALT,
+                                (round(12.2 * TILE_SIZE * TILE_SCALING), round(3.13 * TILE_SIZE * TILE_SCALING))])
+        self.warps.append(self.warp1)
+
         arcade.set_background_color(arcade.color.BLACK)
 
         for n in self.scenes:
@@ -226,6 +258,54 @@ class Game(arcade.Window):
                     self.physics_engines.append(physics_engine)
 
         self.controls = True
+
+    def direccio_a_tecla(self, direccio_origen):
+        if direccio_origen == ADALT:
+            return self.tecla_adalt
+        if direccio_origen == ABAIX:
+            return self.tecla_abaix
+        if direccio_origen == ESQUERRA:
+            return self.tecla_esquerra
+        if direccio_origen == DRETA:
+            return self.tecla_dreta
+
+    def warp(self, origin, destination):
+        if not self.pantalla_negra:
+            self.controls = False
+            if self.motxilla.open:
+                self.motxilla.close()
+            self.player_sprite.change_y = 0
+            self.player_sprite.change_x = 0
+            self.player_sprite.direccio = origin[3]
+            if not self.opaquing and self.transparency == 0:
+                self.opaquing = True
+            self.pantalla_negra = True
+        if self.transparency < 255 and self.opaquing:
+            self.transparency += 5
+        elif self.transparency == 255 and self.opaquing:
+            self.opaquing = False
+            self.player_sprite.left = destination[4][0]
+            if destination[1][0] < 0:                                #Pel bug que el peluso se'n va una mica fora de límit (pel physics engine)
+                self.player_sprite.bottom = destination[1][1]
+            elif destination[1][1] < 0:
+                self.player_sprite.bottom = destination[1][0]
+            else:
+                self.player_sprite.bottom = destination[4][1]
+            self.current_map = destination[2]
+            self.player_sprite.direccio = origin[3]
+        elif self.transparency > 0 and not self.opaquing:
+            self.transparency -= 5
+            if self.transparency == 0:
+                if self.tecla_abaix:
+                    self.player_sprite.change_y = -MOVEMENT_SPEED
+                if self.tecla_adalt:
+                    self.player_sprite.change_y = MOVEMENT_SPEED
+                if self.tecla_esquerra:
+                    self.player_sprite.change_x = -MOVEMENT_SPEED
+                if self.tecla_dreta:
+                    self.player_sprite.change_x = MOVEMENT_SPEED
+                self.controls = True
+                self.pantalla_negra = False
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.RIGHT:
@@ -363,6 +443,23 @@ class Game(arcade.Window):
         else:
             self.player_sprite.center_x += self.player_sprite.change_x
 
+        for warp in self.warps:
+            player_coords = (self.player_sprite.left, self.player_sprite.bottom)
+            if (warp.location1[0][0] <= player_coords[0] <= warp.location1[0][1]
+                    and warp.location1[1][0] <= player_coords[1] <= warp.location1[1][1]
+                    and self.player_sprite.direccio == warp.dir1 and self.current_map == warp.map1
+                    and self.direccio_a_tecla(warp.dir1))\
+                    or (self.pantalla_negra and self.player_sprite.direccio == warp.dir1):
+                self.warp(warp.point1, warp.point2)
+            elif (warp.location2[0][0] <= player_coords[0] <= warp.location2[0][1]
+                    and warp.location2[1][0] <= player_coords[1] <= warp.location2[1][1]
+                    and self.player_sprite.direccio == warp.dir2
+                    and self.current_map == warp.map2
+                    and self.direccio_a_tecla(warp.dir2))\
+                    or (self.pantalla_negra and self.player_sprite.direccio == warp.dir2):
+                self.warp(warp.point2, warp.point1)
+
+        '''
         if (self.player_sprite.bottom <= 0 and self.player_sprite.right < 128 * TILE_SCALING * 2 and
            self.player_sprite.change_y < 0 and self.current_map == 0)\
                 or (self.pantalla_negra and self.player_sprite.direccio == ABAIX):
@@ -425,6 +522,7 @@ class Game(arcade.Window):
                         self.player_sprite.change_x = MOVEMENT_SPEED
                     self.controls = True
                     self.pantalla_negra = False
+        '''
 
         if self.player_sprite.top + self.player_sprite.change_y > HEIGHT:
             self.player_sprite.top = HEIGHT
